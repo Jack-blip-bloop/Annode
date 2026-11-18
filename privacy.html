@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Privacy - {{ app_name }}{% endblock %}
+{% block body %}
+<h1>Privacy policy</h1>
+<p class="dim">Last updated {{ updated }}</p>
+
+<p>{{ app_name }} annotates readings you upload. This page explains exactly what happens to your file and what we
+  keep. The short version: we don't keep your files, and we don't have accounts.</p>
+
+<h2>Your files</h2>
+<ul>
+  <li>Your file is held in the server's memory only while it's being annotated. It is never saved to disk or a
+    database.</li>
+  <li>The annotated PDF is also held only in memory. It is deleted as soon as you download it, or after {{ ttl }}
+    minutes if you don't.</li>
+  <li>We don't keep copies, file names, or the text of your readings, and we don't look at them.</li>
+</ul>
+
+<h2>The AI service we use</h2>
+<p>To decide what to mark, the <strong>text</strong> of your pages (not the file itself) is sent to Google's Gemini
+  API, which processes it and sends back its suggestions. Google handles that text under the
+  <a href="https://ai.google.dev/gemini-api/terms" rel="noopener">Gemini API terms</a>. Don't upload anything you
+  wouldn't want processed this way, such as private documents or other people's personal information.</p>
+
+<h2>What we do keep</h2>
+<p>To run the free daily limit and to keep an eye on costs, we record numbers only: for each day, how many pages were
+  annotated, how much AI processing that used, and how long it took. These are grouped by an anonymous visitor code,
+  made by scrambling your IP address in a way that can't be reversed. We don't store your IP address itself.</p>
+
+<h2>Cookies and tracking</h2>
+<p>We don't use cookies, advertising, or analytics trackers.</p>
+
+<h2>Children</h2>
+<p>{{ app_name }} is meant for students aged 13 and over. If you're under 18, check with a parent or guardian before
+  using it.</p>
+
+<h2>Changes and contact</h2>
+<p>If this policy changes, we'll update the date at the top of this page.
+  {% if contact %}Questions? Email <a href="mailto:{{ contact }}">{{ contact }}</a>.{% endif %}</p>
+{% endblock %}

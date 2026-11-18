@@ -1,0 +1,7 @@
+pymupdf>=1.24
+google-genai>=1.0
+pillow>=10
+pytesseract>=0.3.10
+flask>=3.0
+# Also needs the Tesseract OCR program for scanned pages: https://github.com/tesseract-ocr/tesseract
+#   (Linux: apt install tesseract-ocr)

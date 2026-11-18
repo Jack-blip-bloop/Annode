@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ app_name }}{% endblock %}</title>
+<style>
+  :root {
+    --bg: #faf8fd; --card: #ffffff; --ink: #1d1a24; --dim: #6b6577; --line: #e4dff0;
+    --accent: #6b3db8; --accent-ink: #ffffff; --accent-soft: #efe7fb; --bad: #b3261e; --bad-soft: #fdecea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #16141b; --card: #201d27; --ink: #ece8f4; --dim: #a59fb3; --line: #34303d;
+            --accent: #a98be6; --accent-ink: #16141b; --accent-soft: #2c2540; --bad: #f2b8b5; --bad-soft: #3a2224; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h2 { font-size: 20px; margin: 32px 0 8px; }
+  p, li { color: var(--ink); }
+  .dim { color: var(--dim); }
+  a { color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  footer { margin-top: 48px; font-size: 14px; color: var(--dim); display: flex; gap: 16px; flex-wrap: wrap; }
+  footer a { color: var(--dim); }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<main>
+{% block body %}{% endblock %}
+<footer>
+  <a href="/">{{ app_name }}</a>
+  <a href="/privacy">Privacy</a>
+  <a href="/terms">Terms</a>
+</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Usage - {{ app_name }}{% endblock %}
+{% block head %}
+<style>
+  main { max-width: 980px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--dim); font-weight: 600; }
+  .wrap { overflow-x: auto; }
+</style>
+{% endblock %}
+{% block body %}
+<h1>Usage and AI cost</h1>
+<p class="dim">Counts only: no files, file names or text are kept. Costs are estimates from the token counts and the
+  prices set in PRICE_IN_PER_M / PRICE_OUT_PER_M.</p>
+<h2>By day</h2>
+<div class="card wrap">
+<table>
+  <tr><th>Day</th><th>Visitors</th><th>Files</th><th>Pages</th><th>Scanned</th><th>Tokens in</th><th>Tokens out</th>
+      <th>Cost $</th><th>$ / page</th><th>Avg sec / page</th><th>Failed</th></tr>
+  {% for d in days %}
+  <tr><td>{{ d[0] }}</td><td>{{ d[1] }}</td><td>{{ d[2] }}</td><td>{{ d[3] }}</td><td>{{ d[4] }}</td>
+      <td>{{ "{:,}".format(d[5]) }}</td><td>{{ "{:,}".format(d[6]) }}</td><td>{{ "%.4f"|format(d[7]) }}</td>
+      <td>{{ "%.5f"|format(d[7] / d[3]) if d[3] else "-" }}</td>
+      <td>{{ "%.1f"|format(d[8] / d[3]) if d[3] else "-" }}</td><td>{{ d[9] }}</td></tr>
+  {% else %}
+  <tr><td colspan="11">Nothing yet.</td></tr>
+  {% endfor %}
+</table>
+</div>
+<h2>Heaviest visitors, last 30 days</h2>
+<div class="card wrap">
+<table>
+  <tr><th>Visitor (anonymous)</th><th>Pages</th><th>Cost $</th></tr>
+  {% for t in top %}<tr><td>{{ t[0] }}</td><td>{{ t[1] }}</td><td>{{ "%.4f"|format(t[2]) }}</td></tr>
+  {% else %}<tr><td colspan="3">Nothing yet.</td></tr>{% endfor %}
+</table>
+</div>
+{% endblock %}

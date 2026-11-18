@@ -1,0 +1,8 @@
+gemini_key.txt
+web/usage.db
+web/.visitor_salt
+tests/inputs/
+tests/readings/
+__pycache__/
+*.pyc
+web/server.log

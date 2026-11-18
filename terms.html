@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Terms - {{ app_name }}{% endblock %}
+{% block body %}
+<h1>Terms of use</h1>
+<p class="dim">Last updated {{ updated }}</p>
+
+<h2>What it is</h2>
+<p>{{ app_name }} is a study aid. It marks up a reading and asks questions to help you read it actively. It doesn't
+  write answers or assignments, and it isn't a substitute for doing the reading.</p>
+
+<h2>Using it fairly</h2>
+<ul>
+  <li>Only upload files you have the right to use, such as readings you were given for a class or your own notes.</li>
+  <li>Follow your school's rules about using AI tools. Some teachers don't allow them for certain work.</li>
+  <li>Don't try to overload, break or get around the limits of the service, or use it to process anything illegal.</li>
+</ul>
+
+<h2>The free tier</h2>
+<p>You can annotate up to {{ free }} pages a day for free. We may change limits, or pause the service, at any
+  time.</p>
+
+<h2>No guarantees</h2>
+<p>The annotations are made by an AI and can be wrong, miss important points, or mark the wrong words. Always use your
+  own judgment. The service is provided "as is", without warranties of any kind, and to the extent the law allows,
+  we aren't liable for any loss from using it.</p>
+
+<h2>Your files</h2>
+<p>You keep all rights to what you upload. We only use it to make your annotated copy, as described in the
+  <a href="/privacy">privacy policy</a>.</p>
+
+<h2>Changes</h2>
+<p>We may update these terms. The date at the top shows when they last changed. Continuing to use {{ app_name }}
+  means you accept the current terms.
+  {% if contact %}Questions? Email <a href="mailto:{{ contact }}">{{ contact }}</a>.{% endif %}</p>
+{% endblock %}

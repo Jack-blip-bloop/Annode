@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+  main { max-width: 760px; }
+  .drop { display: block; border: 2px dashed var(--line); border-radius: 14px; padding: 28px 16px; text-align: center;
+          cursor: pointer; transition: border-color .15s, background .15s; }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop strong { display: block; font-size: 18px; margin-bottom: 4px; }
+  .drop input { display: none; }
+  .file { margin-top: 10px; font-weight: 600; word-break: break-all; }
+  .sec { font-weight: 700; margin: 20px 0 6px; display: block; }
+  .hint { font-size: 13px; color: var(--dim); margin-top: 4px; }
+  input[type=text], select, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+  textarea { resize: vertical; min-height: 64px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+  .chk { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .chk input { width: 17px; height: 17px; accent-color: var(--accent); margin: 0; flex: none; }
+  .radios { display: flex; gap: 18px; flex-wrap: wrap; }
+  .presets { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .presets select { flex: 1; min-width: 160px; width: auto; }
+  .link { background: none; border: 1px solid var(--line); color: var(--ink); width: auto; margin: 0; padding: 8px 12px;
+          font-weight: 500; border-radius: 10px; cursor: pointer; font: inherit; }
+  .link:hover { border-color: var(--accent); }
+  details { border: 1px solid var(--line); border-radius: 12px; padding: 4px 14px; margin-top: 20px; }
+  details[open] { padding-bottom: 14px; }
+  summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
+  .colors { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 14px; }
+  @media (max-width: 520px) { .colors { grid-template-columns: 1fr 1fr; } }
+  .colors label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  input[type=color] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; flex: none; }
+  .go { font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 13px 20px; cursor: pointer;
+        background: var(--accent); color: var(--accent-ink); width: 100%; margin-top: 22px; }
+  .go:disabled { opacity: .5; cursor: default; }
+  .ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .bar { height: 8px; background: var(--accent-soft); border-radius: 99px; overflow: hidden; margin: 14px 0 8px; }
+  .bar div { height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+  .err { background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 10px 12px; margin-top: 14px; display: none; }
+  .left { font-size: 14px; margin-top: 12px; }
+  .review { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; margin-top: 12px; }
+  @media (max-width: 640px) { .review { grid-template-columns: 1fr; } }
+  .pages { max-height: 70vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  .pages img { width: 100%; display: block; border-bottom: 1px solid var(--line); }
+  .items { max-height: 70vh; overflow-y: auto; font-size: 14px; }
+  .items h4 { margin: 10px 0 4px; font-size: 13px; color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
+  .items .chk { padding: 3px 0; align-items: flex-start; }
+  .items .chk input { margin-top: 2px; }
+  .items .chk span { word-break: break-word; }
+  .how { padding-left: 20px; }
+  .how li { margin: 4px 0; }
+  .inline-save { display: none; gap: 8px; margin-top: 8px; }
+  .inline-save input { flex: 1; }
+</style>
+{% endblock %}
+{% block body %}
+<h1>{{ app_name }}</h1>
+<p class="dim">Upload a reading and get it back annotated the way a strong student would. It never writes your
+  answers for you.</p>
+
+<div class="card" id="upload">
+  <label class="drop" id="drop">
+    <strong>Drop a PDF or a photo of a page here</strong>
+    <span class="dim">or click to choose one &middot; up to {{ max_pages }} pages, {{ max_mb }} MB</span>
+    <input type="file" id="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.tif,.tiff,application/pdf,image/*">
+    <div class="file" id="fname"></div>
+  </label>
+
+  <span class="sec">Preset</span>
+  <div class="presets">
+    <select id="preset"></select>
+    <button class="link" id="presetSave" type="button">Save as...</button>
+    <button class="link" id="presetDel" type="button">Delete</button>
+  </div>
+  <div class="inline-save" id="saveRow">
+    <input type="text" id="presetName" maxlength="40" placeholder="Name this preset">
+    <button class="link" id="presetOk" type="button">Save</button>
+  </div>
+
+  <label class="sec" for="focus">What should I annotate for?</label>
+  <input type="text" id="focus" maxlength="300" placeholder="e.g. exam review, the author's argument, every time clothes are mentioned">
+  <div class="hint">A general aim, or something specific ("every date", "every time money is mentioned"). If it's specific, only that gets marked.</div>
+
+  <label class="sec" for="teacher">Teacher's instructions <span class="dim">(optional)</span></label>
+  <textarea id="teacher" maxlength="3000" placeholder="Paste how your teacher wants it annotated"></textarea>
+  <div class="hint">These are followed first.</div>
+
+  <span class="sec">Marks</span>
+  <div class="grid" id="styles">
+    <label class="chk"><input type="checkbox" value="underline"> Underline</label>
+    <label class="chk"><input type="checkbox" value="double"> Double underline</label>
+    <label class="chk"><input type="checkbox" value="squiggle"> Squiggle</label>
+    <label class="chk"><input type="checkbox" value="circle"> Circle</label>
+    <label class="chk"><input type="checkbox" value="box"> Box</label>
+    <label class="chk"><input type="checkbox" value="highlight"> Highlight</label>
+  </div>
+
+  <span class="sec">Options</span>
+  <div class="grid">
+    <label class="chk"><input type="checkbox" id="notes"> Add notes</label>
+    <label class="chk" {% if not my_hand %}title="Your handwriting hasn't been set up on this computer"{% endif %}>
+      <input type="checkbox" id="hand_notes" {% if not my_hand %}disabled{% endif %}> Notes in my handwriting</label>
+    <label class="chk"><input type="checkbox" id="summary_box"> Summary box at top</label>
+    <label class="chk"><input type="checkbox" id="symbols"> Margin symbols ? ! &#9733; &rarr;</label>
+    <label class="chk"><input type="checkbox" id="preview"> Preview before downloading</label>
+  </div>
+
+  <span class="sec">Amount</span>
+  <div class="radios">
+    <label class="chk"><input type="radio" name="amount" value="few"> Few</label>
+    <label class="chk"><input type="radio" name="amount" value="normal"> Normal</label>
+    <label class="chk"><input type="radio" name="amount" value="lots"> Lots</label>
+  </div>
+
+  <details id="custom">
+    <summary>Customize</summary>
+    <span class="sec">Colours</span>
+    <div class="colors">
+      <label><input type="color" id="c_ink"> Marks</label>
+      <label><input type="color" id="c_highlight"> Highlighter</label>
+      <label><input type="color" id="c_notes"> Notes</label>
+    </div>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="color_by_type"> A different colour for each kind of idea</label>
+    <div class="colors" id="roleColors" style="margin-top:8px">
+      <label><input type="color" data-role="main_idea"> Main ideas</label>
+      <label><input type="color" data-role="key_term"> Key terms</label>
+      <label><input type="color" data-role="definition"> Definitions</label>
+      <label><input type="color" data-role="fact"> Facts</label>
+      <label><input type="color" data-role="question"> Questions</label>
+      <label><input type="color" data-role="key_quote"> Key quote</label>
+    </div>
+
+    <span class="sec">Handwritten notes</span>
+    <div class="grid">
+      <label>Size <select id="hand_size"><option value="small">Small</option><option value="normal">Normal</option><option value="large">Large</option></select></label>
+      <label>Writing <select id="hand_style"><option value="neat">Neat</option><option value="normal">Normal</option><option value="messy">Messy</option></select></label>
+      <label>How many <select id="notes_amount"><option value="few">Few</option><option value="normal">Normal</option><option value="many">Many</option></select></label>
+    </div>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="connectors"> Connector line from each note to its text</label>
+
+    <span class="sec">Marks look</span>
+    <div class="radios">
+      <label class="chk"><input type="radio" name="mark_style" value="neat"> Neat</label>
+      <label class="chk"><input type="radio" name="mark_style" value="normal"> Normal</label>
+      <label class="chk"><input type="radio" name="mark_style" value="messy"> Messy</label>
+    </div>
+  </details>
+
+  <button class="go" id="go" disabled>Annotate</button>
+  <div class="err" id="err"></div>
+  <p class="left dim" id="left">{{ left }} of {{ free }} free pages left today.</p>
+</div>
+
+<div class="card" id="working" hidden>
+  <strong id="title">Annotating...</strong>
+  <div class="bar"><div id="fill"></div></div>
+  <div class="dim" id="msg">Starting...</div>
+  <div id="reviewBox" hidden>
+    <p class="dim" style="margin:10px 0 0">Untick anything you don't want, then download.</p>
+    <div class="review">
+      <div class="pages" id="pages"></div>
+      <div class="items" id="items"></div>
+    </div>
+  </div>
+  <button class="go" id="dl" hidden>Download the annotated PDF</button>
+  <button class="go ghost" id="again" hidden>Annotate another</button>
+  <div class="err" id="err2"></div>
+</div>
+
+<h2>How it works</h2>
+<ul class="how">
+  <li>The AI's notes go on their own layer ("AI annotations"), in their own colours, so your notes stand out and you can hide its notes.</li>
+  <li>Notes go in a margin added to the right of each page. Your original pages aren't changed.</li>
+  <li>Your file isn't saved. It's processed in memory and deleted once you download the result. <a href="/privacy">Privacy details</a>.</li>
+</ul>
+
+<script>
+const $ = id => document.getElementById(id);
+const DEFAULTS = { focus: "", teacher: "", styles: ["underline", "circle", "highlight"], notes: true, hand_notes: false,
+  summary_box: false, symbols: false, preview: false, amount: "normal", color_by_type: false,
+  colors: { ink: "#6b3db8", highlight: "#cbb3f5", notes: "#6b3db8" },
+  role_colors: { main_idea: "#c62828", key_term: "#1f4fbf", definition: "#2e7d32", fact: "#7b3fb5", question: "#e07000", key_quote: "#ad1457" },
+  hand_size: "normal", hand_style: "normal", notes_amount: "normal", connectors: true, mark_style: "normal" };
+// the same built-in presets as the OneNote annotator
+const BUILTIN = {
+  "English essay": { focus: "the thesis, the main claims, the evidence and examples, literary devices, and the author's purpose and tone",
+                     styles: ["underline", "double", "squiggle", "circle", "box", "highlight"], amount: "normal", symbols: true, summary_box: true },
+  "Science notes": { focus: "key terms, definitions, formulas, processes and steps, and cause and effect",
+                     styles: ["underline", "circle", "box", "highlight"], amount: "normal", summary_box: true },
+  "History reading": { focus: "people, dates, places and events, causes and effects, and the author's main argument",
+                       styles: ["underline", "circle", "box", "highlight", "squiggle"], amount: "normal", symbols: true },
+  "Vocab list": { focus: "each vocabulary word and the key part of its definition", styles: ["circle", "underline", "box"],
+                  amount: "lots", notes: false, hand_notes: false },
+};
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+function collect() {
+  const o = { focus: $("focus").value.trim(), teacher: $("teacher").value.trim(),
+    styles: [...document.querySelectorAll("#styles input:checked")].map(i => i.value),
+    amount: (document.querySelector("input[name=amount]:checked") || {}).value || "normal",
+    mark_style: (document.querySelector("input[name=mark_style]:checked") || {}).value || "normal",
+    colors: { ink: $("c_ink").value, highlight: $("c_highlight").value, notes: $("c_notes").value }, role_colors: {} };
+  for (const k of ["notes", "hand_notes", "summary_box", "symbols", "preview", "color_by_type", "connectors"]) o[k] = $(k).checked;
+  for (const k of ["hand_size", "hand_style", "notes_amount"]) o[k] = $(k).value;
+  document.querySelectorAll("#roleColors input").forEach(i => o.role_colors[i.dataset.role] = i.value);
+  return o;
+}
+function apply(s) {
+  s = Object.assign({}, DEFAULTS, s, { colors: Object.assign({}, DEFAULTS.colors, s.colors || {}),
+                                        role_colors: Object.assign({}, DEFAULTS.role_colors, s.role_colors || {}) });
+  $("focus").value = s.focus; $("teacher").value = s.teacher;
+  document.querySelectorAll("#styles input").forEach(i => i.checked = s.styles.includes(i.value));
+  for (const k of ["notes", "hand_notes", "summary_box", "symbols", "preview", "color_by_type", "connectors"]) $(k).checked = !!s[k];
+  if ($("hand_notes").disabled) $("hand_notes").checked = false;
+  for (const k of ["hand_size", "hand_style", "notes_amount"]) $(k).value = s[k];
+  document.querySelectorAll("input[name=amount]").forEach(i => i.checked = i.value === s.amount);
+  document.querySelectorAll("input[name=mark_style]").forEach(i => i.checked = i.value === s.mark_style);
+  $("c_ink").value = s.colors.ink; $("c_highlight").value = s.colors.highlight; $("c_notes").value = s.colors.notes;
+  document.querySelectorAll("#roleColors input").forEach(i => i.value = s.role_colors[i.dataset.role]);
+  syncRoles();
+}
+function syncRoles() { $("roleColors").style.display = $("color_by_type").checked ? "" : "none"; }
+$("color_by_type").addEventListener("change", syncRoles);
+document.getElementById("upload").addEventListener("change", () => store.set("settings", collect()));
+document.getElementById("upload").addEventListener("input", () => store.set("settings", collect()));
+
+// presets: the built-in ones plus your own (kept in this browser)
+const HOW_KEYS = ["focus", "teacher", "styles", "notes", "hand_notes", "amount", "summary_box", "symbols", "notes_amount",
+  "hand_size", "hand_style", "mark_style", "connectors", "colors", "color_by_type", "role_colors", "preview"];
+function presets() { return Object.assign({}, BUILTIN, store.get("presets", {})); }
+function fillPresets(sel) {
+  const p = presets();
+  $("preset").innerHTML = '<option value="">(none)</option>' +
+    Object.keys(p).map(n => `<option>${n.replace(/</g, "&lt;")}</option>`).join("");
+  $("preset").value = sel || "";
+}
+$("preset").addEventListener("change", () => {
+  const p = presets()[$("preset").value];
+  if (p) { apply(Object.assign(collect(), JSON.parse(JSON.stringify(p)))); store.set("settings", collect()); }
+});
+$("presetSave").addEventListener("click", () => { $("saveRow").style.display = "flex"; $("presetName").focus(); });
+$("presetOk").addEventListener("click", () => {
+  const name = $("presetName").value.trim(); if (!name) return;
+  const mine = store.get("presets", {}), now = collect(), p = {};
+  HOW_KEYS.forEach(k => p[k] = now[k]); mine[name] = p; store.set("presets", mine);
+  $("saveRow").style.display = "none"; $("presetName").value = ""; fillPresets(name);
+});
+$("presetDel").addEventListener("click", () => {
+  const name = $("preset").value, mine = store.get("presets", {});
+  if (!name) return;
+  if (BUILTIN[name] && !mine[name]) { alert("That's a built-in preset."); return; }
+  delete mine[name]; store.set("presets", mine); fillPresets("");
+});
+fillPresets(""); apply(store.get("settings", {}));
+
+// upload
+let file = null, job = null, items = [], version = 0;
+function showErr(el, text) { el.textContent = text; el.style.display = text ? "block" : "none"; }
+function pick(f) { file = f; $("fname").textContent = f ? f.name : ""; $("go").disabled = !f; showErr($("err"), ""); }
+$("file").addEventListener("change", e => pick(e.target.files[0]));
+["dragenter", "dragover"].forEach(ev => $("drop").addEventListener(ev, e => { e.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => $("drop").addEventListener(ev, e => { e.preventDefault(); $("drop").classList.remove("over"); }));
+$("drop").addEventListener("drop", e => { if (e.dataTransfer.files[0]) pick(e.dataTransfer.files[0]); });
+
+$("go").addEventListener("click", async () => {
+  if (!file) return;
+  const o = collect();
+  if (!o.styles.length) { showErr($("err"), "Tick at least one kind of mark."); return; }
+  $("go").disabled = true;
+  const fd = new FormData();
+  fd.append("file", file); fd.append("options", JSON.stringify(o)); fd.append("preview", o.preview ? "1" : "0");
+  let r, j;
+  try { r = await fetch("/api/annotate", { method: "POST", body: fd }); j = await r.json(); }
+  catch (e) { showErr($("err"), "Couldn't upload. Check your connection and try again."); $("go").disabled = false; return; }
+  if (!r.ok) { showErr($("err"), j.error || "Something went wrong."); $("go").disabled = false; return; }
+  job = j.job;
+  $("upload").hidden = true; $("working").hidden = false;
+  $("title").textContent = `Annotating ${j.pages} page${j.pages === 1 ? "" : "s"}...`;
+  poll();
+});
+
+function summaryText(s) {
+  if (s.mode === "targeted") return `Found and marked ${s.marks} match${s.marks === 1 ? "" : "es"} on ${s.pages} page${s.pages === 1 ? "" : "s"}.`;
+  const bits = [`${s.marks} marks`];
+  if (s.notes) bits.push(`${s.notes} notes`);
+  if (s.symbols) bits.push(`${s.symbols} symbols`);
+  if (s.summary) bits.push("a summary box");
+  return bits.join(", ") + ` on ${s.pages} page${s.pages === 1 ? "" : "s"}.`;
+}
+
+async function poll() {
+  let s;
+  try { s = await (await fetch(`/api/jobs/${job}`)).json(); }
+  catch (e) { setTimeout(poll, 2000); return; }
+  $("fill").style.width = s.pct + "%";
+  $("msg").textContent = s.msg;
+  $("left").textContent = `${s.left} of {{ free }} free pages left today.`;
+  if (s.status === "working") { setTimeout(poll, 1000); return; }
+  if (s.status === "done" || s.status === "review") {
+    $("title").textContent = "Ready";
+    $("msg").textContent = summaryText(s.stats);
+    $("dl").hidden = false;
+    if (s.status === "review") showReview(s);
+  } else {
+    $("title").textContent = "Couldn't annotate that";
+    showErr($("err2"), s.msg);
+    $("again").hidden = false;
+  }
+}
+
+function showReview(s) {
+  items = s.items; version = s.version;
+  $("reviewBox").hidden = false;
+  drawPages(s.page_count);
+  const ex = new Set(s.exclude), byPage = {};
+  items.forEach(it => (byPage[it.page] = byPage[it.page] || []).push(it));
+  $("items").innerHTML = Object.keys(byPage).map(p => `<h4>Page ${+p + 1}</h4>` + byPage[p].map(it =>
+    `<label class="chk"><input type="checkbox" data-id="${it.id}" ${ex.has(it.id) ? "" : "checked"}><span></span></label>`).join("")).join("");
+  $("items").querySelectorAll("label").forEach((l, i) => l.querySelector("span").textContent = itemsInOrder(byPage)[i].label);
+  $("items").querySelectorAll("input").forEach(i => i.addEventListener("change", redraw));
+}
+function itemsInOrder(byPage) { return Object.keys(byPage).flatMap(p => byPage[p]); }
+function drawPages(n) {
+  $("pages").innerHTML = Array.from({ length: n }, (_, i) => `<img alt="Page ${i + 1}" src="/api/jobs/${job}/page/${i}?v=${version}">`).join("");
+}
+let redrawTimer = null;
+function redraw() {
+  clearTimeout(redrawTimer);
+  redrawTimer = setTimeout(async () => {
+    const exclude = [...$("items").querySelectorAll("input:not(:checked)")].map(i => +i.dataset.id);
+    $("dl").disabled = true; $("msg").textContent = "Updating the preview...";
+    const r = await fetch(`/api/jobs/${job}/redraw`, { method: "POST", headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify({ exclude }) });
+    if (r.ok) { version = (await r.json()).version; drawPages($("pages").children.length); }
+    $("dl").disabled = false;
+    $("msg").textContent = `${items.length - exclude.length} of ${items.length} annotations will be in your PDF.`;
+  }, 350);
+}
+
+$("dl").addEventListener("click", () => {
+  window.location = `/api/jobs/${job}/download`;
+  $("dl").hidden = true; $("reviewBox").hidden = true; $("again").hidden = false;
+  $("msg").textContent = "Downloaded. It's been deleted from our side.";
+});
+$("again").addEventListener("click", () => location.reload());
+</script>
+{% endblock %}
